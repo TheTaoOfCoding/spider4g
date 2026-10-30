@@ -1,10 +1,10 @@
 package io.github.thetaoofcoding.example
 
 import groovy.concurrent.Awaitable
-import io.github.thetaoofcoding.component.DocTasks
+import io.github.thetaoofcoding.factory.DocTasks
 import io.github.thetaoofcoding.component.Flow
-import io.github.thetaoofcoding.component.HttpTasks
-import io.github.thetaoofcoding.component.ParseTasks
+import io.github.thetaoofcoding.factory.HttpTasks
+import io.github.thetaoofcoding.factory.ParseTasks
 import io.github.thetaoofcoding.component.Task
 import org.jsoup.nodes.Document
 
@@ -77,11 +77,11 @@ class Example4QuanBen {
     }
 
     // 章节列表[全部]
-    static Flow<Book, List<Book.Chapter>> chaptersFlow() {
+    static Flow<Book, List<Closure>> chaptersFlow() {
         def flow1 = skeletonListFlow()
         def flow2 = middleListFlow();
         { ->
-            { Book book ->
+            { book ->
                 def (callback, chapters1) = flow1 {
                     httpUri = book.uri
                 }
@@ -96,14 +96,15 @@ class Example4QuanBen {
                     chapter.orderId = uri.substring(uri.lastIndexOf('/') + 1, chapter.uri.lastIndexOf('.')) as Integer
                     chapter.path = ''
                 }
-                book.chapters = chapters.sort { it.orderId }
-                async { book }
+                chapters.sort { it.orderId }
+                async { chapters.collect { chapter -> { httpUri = chapter.uri } } }
             }
         }
     }
 
     // 章节内容
-    static Flow<Closure, String> contentFlow() {
+    static Flow<Closure, Book.Chapter> contentFlow() {
+//        Task.
         def httpTask = HttpTasks.httpGet()
         def docTask = DocTasks.html { doc ->
             def title = doc.select('div.main h1').first().text()
@@ -111,6 +112,11 @@ class Example4QuanBen {
             "${title}\n${content}"
         };
         { -> httpTask | docTask }
+    }
+
+    // 全部章节内容
+    static Flow<List<Closure>, List<Book.Chapter>> contentListFlow() {
+        Flow.<Closure, Book.Chapter> withParallel({ it }, contentFlow(), { it })
     }
 
     static String base64(String str) {

@@ -1,6 +1,7 @@
-package io.github.thetaoofcoding.component
+package io.github.thetaoofcoding.factory
 
 import groovy.http.HttpResult
+import io.github.thetaoofcoding.component.Task
 import org.jsoup.nodes.Document
 import java.util.function.Function
 

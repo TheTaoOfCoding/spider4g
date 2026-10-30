@@ -1,4 +1,6 @@
-package io.github.thetaoofcoding.component
+package io.github.thetaoofcoding.factory
+
+import io.github.thetaoofcoding.component.Task
 
 import java.nio.file.Files
 import java.nio.file.Paths

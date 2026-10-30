@@ -1,6 +1,7 @@
-package io.github.thetaoofcoding.component
+package io.github.thetaoofcoding.factory
 
 import groovy.json.JsonSlurper
+import io.github.thetaoofcoding.component.Task
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 

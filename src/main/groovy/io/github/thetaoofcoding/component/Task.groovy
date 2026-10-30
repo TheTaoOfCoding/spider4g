@@ -3,6 +3,7 @@ package io.github.thetaoofcoding.component
 import groovy.concurrent.Awaitable
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
+import io.github.thetaoofcoding.util.RateLimiter
 
 interface Task<T, R> extends Function<T, Awaitable<R>> {
 
@@ -53,6 +54,13 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     }
 
     /*
+     * 延迟任务
+     */
+    static <T, R> Task<T, R> fromDelay(Function<T, R> function, long delay) {
+        { t -> Awaitable.delay(delay, TimeUnit.SECONDS).then { t }.then(function.&apply) }
+    }
+
+    /*
      * 工厂方法
      */
     static <T, R> Task<T, R> fromSync(Function<T, R> function) {
@@ -63,14 +71,25 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 一致性任务
      */
     static <T> Task<T, T> identity() {
-        { t -> Awaitable.<T>of(t) }
+        { t -> Awaitable.<T> of(t) }
     }
 
     /*
      * 空任务
      */
     static <T, R> Task<T, R> empty() {
-        { _ -> Awaitable.<R>of(null) }
+        { _ -> Awaitable.<R> of(null) }
+    }
+
+    /*
+     * 限流任务
+     */
+    static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask, long delay) {
+        { t -> Awaitable.go(RateLimiter.&acquire)
+                .thenCompose { Awaitable.delay(delay, TimeUnit.SECONDS) }
+                .thenCompose { innerTask(t) }
+                .whenComplete(RateLimiter.&release)
+        }
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Task<? super T, R> task) {
@@ -89,12 +108,11 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 并行任务
      */
     static <T, R> Task<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Task<? super T, R> task, Function<List<R>, List<R>> after) {
-        {
-            list -> Awaitable.<List<T>>of(list)
-                        .then(before)
-                        .then { it.collect(task.&execute) as Awaitable[] }
-                        .thenCompose { array -> Awaitable.all(array) }
-                        .then(after)
+        { list -> Awaitable.<List<T>> of(list)
+                    .then(before)
+                    .then { it.collect(task.&execute) as Awaitable[] }
+                    .thenCompose { awaitables -> Awaitable.all(awaitables) }
+                    .then(after)
         }
     }
 }

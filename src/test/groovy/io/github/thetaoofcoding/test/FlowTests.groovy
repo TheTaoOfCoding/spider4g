@@ -1,6 +1,7 @@
 package io.github.thetaoofcoding.test
 
 import io.github.thetaoofcoding.component.Flow
+import io.github.thetaoofcoding.component.Task
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -9,37 +10,37 @@ import static org.junit.jupiter.api.Assertions.*
 class FlowTests {
 
     @Nested
-    class FlowCreate {
+    class FactoryFlow {
         @Test
-        void "creates flow from function 'of'"() {
+        void "工厂方法-of"() {
             def flow = Flow.fromSync(String.&toUpperCase)
             assertEquals("HELLO", flow("hello"))
         }
 
         @Test
-        void "creates flow from 'identity'"() {
+        void "工厂方法-identity"() {
             def flow = Flow.<String> identity()
             assertEquals("hello", flow("hello"))
         }
 
         @Test
-        void "creates flow from 'empty'"() {
+        void "工厂方法-empty"() {
             def flow = Flow.empty()
             assertNull(flow("hello"))
         }
     }
 
     @Nested
-    class FlowCompose {
+    class ComposeFlow {
         @Test
-        void "or chains two flows"() {
+        void "流程组合-or"() {
             def flow1 = Flow.fromSync(String.&toUpperCase)
             def flow2 = Flow.<String, String> fromSync { str -> str + " WORLD" }
             assertEquals("HELLO WORLD", (flow1 | flow2)("hello"))
         }
 
         @Test
-        void "rightShift chains two flows"() {
+        void "流程组合-rightShift"() {
             def flow1 = Flow.fromSync(String.&toUpperCase)
             def flow2 = Flow.<String, String> fromSync { str -> str + " WORLD" }
             assertEquals("HELLO WORLD", (flow1 >> flow2)("hello"))
@@ -47,9 +48,9 @@ class FlowTests {
     }
 
     @Nested
-    class FlowRetry {
+    class RetryFlow {
         @Test
-        void "retries once after first failure"() {
+        void "重试流程-retry"() {
             def attempts = new AtomicInteger(0)
             def flow = Flow.fromSync { String str ->
                 if (attempts.getAndIncrement() == 0) {
@@ -63,7 +64,7 @@ class FlowTests {
         }
 
         @Test
-        void "withRetry delegates to retry"() {
+        void "重试流程-withRetry"() {
             def attempts = new AtomicInteger(0)
             def flow = Flow.withRetry(Flow.fromSync { String str ->
                 if (attempts.getAndIncrement() == 0) {
@@ -78,7 +79,7 @@ class FlowTests {
     }
 
     @Nested
-    class FlowParallel {
+    class ParallelFlow {
         @Test
         void "runs flow for each element in parallel"() {
             def flow = Flow.fromSync(String.&toUpperCase)
