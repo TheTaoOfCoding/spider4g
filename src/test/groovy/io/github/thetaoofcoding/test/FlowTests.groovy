@@ -1,7 +1,6 @@
 package io.github.thetaoofcoding.test
 
 import io.github.thetaoofcoding.component.Flow
-import io.github.thetaoofcoding.component.Task
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger

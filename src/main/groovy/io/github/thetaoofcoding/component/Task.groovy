@@ -64,7 +64,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 工厂方法
      */
     static <T, R> Task<T, R> fromSync(Function<T, R> function) {
-        { t -> async { function.apply(t) } }
+        { t -> Awaitable.of(t).then(function.&apply) }
     }
 
     /*
@@ -86,9 +86,9 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      */
     static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask, long delay) {
         { t -> Awaitable.go(RateLimiter.&acquire)
-                .thenCompose { Awaitable.delay(delay, TimeUnit.SECONDS) }
-                .thenCompose { innerTask(t) }
-                .whenComplete(RateLimiter.&release)
+                    .thenCompose { Awaitable.delay(delay, TimeUnit.SECONDS) }
+                    .thenCompose { innerTask(t) }
+                    .whenComplete(RateLimiter.&release)
         }
     }
 

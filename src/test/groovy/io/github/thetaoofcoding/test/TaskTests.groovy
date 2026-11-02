@@ -1,6 +1,5 @@
 package io.github.thetaoofcoding.test
 
-import groovy.concurrent.Awaitable
 import io.github.thetaoofcoding.component.Task
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,13 +12,13 @@ class TaskTests {
     class Example {
         @Test
         void "任务组合示例"() {
-            def commentTask = Task.<String, String> fromSync { it.toUpperCase() }
+            def composeTask = Task.<String, String> fromSync { it.toUpperCase() }
                     | { str -> async { " $str " } }
                     | { str -> async { "-$str-" } }
                     | { str -> async { "-$str-" } }
                     | { str -> async { "!$str" } }
                     | { str -> async { "<$str>".toString() } }
-            def result = await commentTask("hello")
+            def result = await composeTask("hello")
             assertEquals("<!-- HELLO -->", result)
         }
     }
@@ -98,7 +97,7 @@ class TaskTests {
     class ParallelTask {
         @Test
         void "并行任务-parallel"() {
-            def delayedTask = Task.fromDelay({ String str -> ">>${str.toUpperCase()}<<".toString() }, 1)
+            def delayedTask = Task.fromDelay({ String str -> ">>${str.toUpperCase()}<<".toString() }, 1L)
             def paralleledTask = Task.withParallel(delayedTask)
             long start = System.nanoTime()
             def result = await paralleledTask("hello".toList())
@@ -113,16 +112,16 @@ class TaskTests {
     class RateLimitTask {
         @Test
         void "限流任务-rateLimit"() {
-            def delay = 1L
+            def delay = 2L
             def syncedTask = Task.fromSync { it }
             def rateLimitedTask = Task.withRateLimit(syncedTask, delay)
             def paralleledTask = Task.withParallel(rateLimitedTask)
-            def list = (1..20).toList()
+            def list = (1..6).toList()
             long start = System.nanoTime()
             await paralleledTask(list)
             long end = System.nanoTime()
             def duration = (end - start) / 1_000_000_000
-            // 20 / (RateLimiter.PERMITS * delay) = 4
+            // list.size() / RateLimiter.PERMITS * delay  =====>  6 / 3 * 2 = 4
             assertEquals(duration.intValue(), 4)
         }
     }

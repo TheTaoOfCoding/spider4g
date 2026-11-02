@@ -1,6 +1,7 @@
 package io.github.thetaoofcoding.example
 
 import groovy.transform.ToString
+import java.nio.file.Path
 
 @ToString(includeNames = true, includePackage = false)
 class Book {
@@ -12,7 +13,7 @@ class Book {
     static class Chapter {
         Integer orderId
         String uri
-        String path
+        Path path
         String content
     }
 }

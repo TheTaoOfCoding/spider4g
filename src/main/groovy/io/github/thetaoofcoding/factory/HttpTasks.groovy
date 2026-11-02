@@ -18,9 +18,9 @@ class HttpTasks {
     }
 
     static Task<Closure, HttpResult> httpGet() {
-        { @DelegatesTo(value = HttpArgs, strategy = DELEGATE_FIRST) Closure closure ->
+        { @DelegatesTo(value = HttpArgs, strategy = Closure.DELEGATE_FIRST) Closure closure ->
             def httpArgs = new HttpArgs()
-            closure.resolveStrategy = DELEGATE_FIRST
+            closure.resolveStrategy = Closure.DELEGATE_FIRST
             closure.delegate = httpArgs
             closure()
             def (httpUri, httpHeaders, httpQueries) = [httpArgs.httpUri, httpArgs.httpHeaders, httpArgs.httpQueries]
