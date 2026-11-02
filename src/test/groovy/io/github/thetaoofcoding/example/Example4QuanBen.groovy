@@ -15,13 +15,14 @@ import static io.github.thetaoofcoding.example.Example4QuanBen.QuanBenFlows.*
 class Example4QuanBen {
 
     static void main(String[] args) {
-        (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())("极品修真邪少")
+        def bookName = "极品修真邪少"
+        (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())(bookName)
     }
 
     static class QuanBenFlows {
         // base uri
         static final String ORIGIN = 'https://www.quanben.io'
-        // 是否测试模式
+        // 是否测试模式：测试模式下仅下载前20章
         static final boolean IS_TEST = true
 
         // 搜索电子书流程
@@ -91,6 +92,7 @@ class Example4QuanBen {
             { ->
                 { book ->
                     def files = flow(book.chapters.collect { chapter -> { httpUri = chapter.uri } as Closure })
+                            .with { it.sort { path -> path.fileName.toString().find(/\d+/) as Integer } }
                     def directoryPath = Paths.get("D:/${book.bookName}")
                     def targetPath = directoryPath.resolve("${book.bookName}.txt")
                     def tuple2 = new Tuple2<>(targetPath, files)
