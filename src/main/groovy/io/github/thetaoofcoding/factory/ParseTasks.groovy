@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document
 class ParseTasks {
 
     static Task<String, Document> doc() {
-        { str -> Awaitable.of(Jsoup.parse(str)) }
+        { html -> Awaitable.of(html).then(Jsoup.&parse) }
     }
 
     static <R> Task<String, R> json() {
