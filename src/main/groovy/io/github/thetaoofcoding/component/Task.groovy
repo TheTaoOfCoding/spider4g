@@ -21,14 +21,14 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 任务操作符重载 |
      */
     default <V> Task<T, V> or(Task<? super R, V> next) {
-        { t -> execute(t).thenCompose next }
+        { t -> execute(t).thenCompose(next) }
     }
 
     /*
      * 任务操作符重载 >>
      */
     default <V> Task<T, V> rightShift(Task<? super R, V> next) {
-        { t -> execute(t).thenCompose next }
+        { t -> execute(t).thenCompose(next) }
     }
 
     /*
@@ -56,15 +56,15 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     /*
      * 延迟任务
      */
-    static <T, R> Task<T, R> fromDelay(Function<T, R> function, long delay) {
-        { t -> Awaitable.delay(delay, TimeUnit.SECONDS).then { t }.then(function.&apply) }
+    static <T, R> Task<T, R> fromDelay(Function<T, R> fn, long delay) {
+        { t -> Awaitable.delay(delay, TimeUnit.SECONDS).then { t }.then(fn) }
     }
 
     /*
      * 工厂方法
      */
-    static <T, R> Task<T, R> fromSync(Function<T, R> function) {
-        { t -> Awaitable.of(t).then(function.&apply) }
+    static <T, R> Task<T, R> fromSync(Function<T, R> fn) {
+        { t -> Awaitable.of(t).then(fn) }
     }
 
     /*
@@ -84,6 +84,13 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     /*
      * 限流任务
      */
+    static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask) {
+        Task.<T, R> withRateLimit(innerTask, 0L)
+    }
+
+    /*
+     * 限流任务
+     */
     static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask, long delay) {
         { t -> Awaitable.go(RateLimiter.&acquire)
                     .thenCompose { Awaitable.delay(delay, TimeUnit.SECONDS) }
@@ -97,11 +104,11 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Task<? super T, R> task) {
-        Task.withParallel({ it } as Function<List<T>, List<T>>, task, { it })
+        Task.<T, R>withParallel({ it }, task, { it })
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Task<? super T, R> task, Function<List<R>, List<R>> after) {
-        Task.withParallel({ it } as Function<List<T>, List<T>>, task, after)
+        Task.<T, R>withParallel({ it }, task, after)
     }
 
     /*

@@ -40,8 +40,8 @@ interface Flow<T, R> {
     /*
      * 工厂方法
      */
-    static <T, R> Flow<T, R> fromSync(Function<T, R> function) {
-        { -> Task.fromSync(function) }
+    static <T, R> Flow<T, R> fromSync(Function<T, R> fn) {
+        { -> Task.fromSync(fn) }
     }
 
     /*
