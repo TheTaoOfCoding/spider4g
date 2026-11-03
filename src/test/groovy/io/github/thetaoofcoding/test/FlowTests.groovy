@@ -1,6 +1,7 @@
 package io.github.thetaoofcoding.test
 
 import io.github.thetaoofcoding.component.Flow
+import io.github.thetaoofcoding.component.Task
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -80,7 +81,7 @@ class FlowTests {
     @Nested
     class ParallelFlow {
         @Test
-        void "runs flow for each element in parallel"() {
+        void "并行流程-withParallel"() {
             def flow = Flow.fromSync(String.&toUpperCase)
             def parallelFlow = Flow.withParallel(
                     { list -> list.collect { "**$it**".toString() } },
@@ -94,6 +95,16 @@ class FlowTests {
                     ['>>**H**<<', '>>**E**<<', '>>**L**<<', '>>**L**<<', '>>**O**<<'],
                     result
             )
+        }
+    }
+
+    @Nested
+    class SequentialFlow {
+        @Test
+        void "顺序流程-withSequential"() {
+            def list = (1..10).toList()
+            def flow = Flow.fromSync { ">>$it<<".with { println it } }
+            Flow.withSequential(flow)(list)
         }
     }
 }

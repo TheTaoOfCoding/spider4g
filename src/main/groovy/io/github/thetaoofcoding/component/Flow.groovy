@@ -1,5 +1,6 @@
 package io.github.thetaoofcoding.component
 
+import groovy.concurrent.Awaitable
 import java.util.function.Function
 
 interface Flow<T, R> {
@@ -70,5 +71,12 @@ interface Flow<T, R> {
      */
     static <T, R> Flow<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Flow<? super T, R> flow, Function<List<R>, List<R>> after) {
         { -> Task.withParallel(before, flow.head(), after) }
+    }
+
+    /*
+     * 顺序流程
+     */
+    static <T, R> Flow<List<T>, List<R>> withSequential(Flow<? super T, R> flow) {
+        { -> { List<T> list -> Awaitable.of(list.collect(flow.&call)) } }
     }
 }

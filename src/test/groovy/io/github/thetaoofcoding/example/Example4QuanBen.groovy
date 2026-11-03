@@ -15,7 +15,7 @@ import static io.github.thetaoofcoding.example.Example4QuanBen.QuanBenFlows.*
 class Example4QuanBen {
 
     static void main(String[] args) {
-        def bookName = "极品修真邪少"
+        def bookName = "傲世丹神"
         (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())(bookName)
     }
 
@@ -72,17 +72,15 @@ class Example4QuanBen {
         // 获取章节内容流程【单章节】
         static Flow<Closure, Path> contentFlow() {
             def t1 = DocTasks.html { doc ->
-                def title = doc.select('div.main h1').first().text()
                 def href = doc.select('html head link').first().attr('href')
                 def name = doc.select('div.name').first().text()
                 def orderId = href.substring(href.lastIndexOf('/') + 1, href.lastIndexOf('.')) as Integer
-                def content = doc.select('div.articlebody p').collect { it.text() }.join('\n').with { "${title}\n${it}" }
+                def content = doc.select('div.articlebody p').collect { it.text() }.join('\n')
                 def path = Paths.get("D:/$name/${orderId}.txt")
                 new Tuple2<>(path, content)
             }
             // 保存文件任务
             def t2 = FileTasks.saveFile();
-            // 限流
             { -> Task.<Closure, HttpResult> withRateLimit(HttpTasks.httpGet(), 2L) | t1 | t2 }
         }
 
@@ -104,7 +102,7 @@ class Example4QuanBen {
         // 合并并清理文件
         static Flow<Tuple2<Path, List<Path>>, Void> mergeAndCleanFlow() {
             def flow = { -> FileTasks.appendFileTo() | FileTasks.cleanFile() } as Flow<Tuple2<Path, Path>, Void>
-            def parallelFlow = Flow.withParallel({ it }, flow, { it });
+            def parallelFlow = Flow.withSequential(flow);
             { ->
                 { tuple2 ->
                     def (targetPath, files) = tuple2
