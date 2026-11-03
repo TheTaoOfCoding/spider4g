@@ -15,8 +15,9 @@ import static io.github.thetaoofcoding.example.Example4QuanBen.QuanBenFlows.*
 class Example4QuanBen {
 
     static void main(String[] args) {
-        def bookName = "极品修真邪少"
-        (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())(bookName)
+        def bookNames = ["遮天", "仙逆", "凡人修仙传"]
+        def flow = (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())
+        bookNames.eachParallel(flow.&call)
     }
 
     static class QuanBenFlows {
@@ -86,7 +87,7 @@ class Example4QuanBen {
 
         // 获取章节内容流程【完整】
         static Flow<Book, Tuple2<Path, List<Path>>> contentListFlow() {
-            final def flow = Flow.<Closure, Path> withParallel({ IS_TEST ? it.take(20) : it }, contentFlow(), { it });
+            final def flow = Flow.<Closure, Path> withParallel({ IS_TEST ? it.take(5) : it }, contentFlow(), { it });
             { ->
                 { book ->
                     def files = flow(book.chapters.collect { chapter -> { httpUri = chapter.uri } as Closure })
