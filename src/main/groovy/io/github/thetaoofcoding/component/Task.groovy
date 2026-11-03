@@ -115,4 +115,11 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
                     .then(after)
         }
     }
+
+    /*
+     * 顺序任务
+     */
+    static <T, R> Task<List<T>, List<R>> withSequential(Task<? super T, R> task) {
+        { list -> Awaitable.of(list.collect { t -> await task(t) }) }
+    }
 }
