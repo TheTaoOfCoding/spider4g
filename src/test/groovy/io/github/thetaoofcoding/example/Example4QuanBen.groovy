@@ -15,7 +15,7 @@ import static io.github.thetaoofcoding.example.Example4QuanBen.QuanBenFlows.*
 class Example4QuanBen {
 
     static void main(String[] args) {
-        def bookName = "傲世丹神"
+        def bookName = "极品修真邪少"
         (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())(bookName)
     }
 

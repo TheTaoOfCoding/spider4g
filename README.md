@@ -1,6 +1,6 @@
 # spider4g
 
-> 基于 **Groovy 6** 异步编程能力（`Awaitable` / `async` / `await`）的爬虫与任务编排框架。
+> 一个基于 **Groovy 6** 异步编程能力（`Awaitable` / `async` / `await`）的爬虫与任务编排框架。
 
 `spider4g` 把「发请求 → 解析 → 转换 → 落盘」拆成一个个可复用的 `Task`，再用操作符像管道一样把任务串成 `Flow`，并以列表并行的方式批量执行，同时内置**重试、限流、延迟、并行**等爬虫场景里最常用的控制能力。
 
@@ -53,7 +53,6 @@
 | [jsoup](https://jsoup.org/) | 1.23.2 | HTML 选择器解析 |
 | [Log4j 2](https://logging.apache.org/log4j/2.x/) | 2.26.1 | 日志门面 + 实现（含 SLF4J 绑定） |
 
-> `lib/` 目录存放 Groovy 6.0.0 的运行时与 `-sources` jar，仅作本地参考/IDE 附加源码使用；构建依赖仍由 `build.gradle` 从 Maven Central 解析。
 
 ---
 
@@ -87,9 +86,7 @@ spider4g/
         │   └── FlowTests.groovy     # Flow 的组合/重试/并行测试
         └── example/
             ├── Example4QuanBen.groovy # 全本小说下载示例（含 main）
-            ├── Book.groovy            # 示例领域模型（Book / Chapter）
-            ├── QuanBenFlows.groovy    # 空文件（历史残留）
-            └── test/QuanBeanTests.groovy
+            └──  Book.groovy            # 示例领域模型（Book / Chapter）
 ```
 
 ---
@@ -409,11 +406,6 @@ class MyTasks {
 3. **硬编码路径**：输出目录写死为 `D:/{书名}/`，仅在 Windows 且存在 D 盘时可用，跨平台需修改 `contentFlow()` 与 `contentListFlow()` 中的 `Paths.get(...)`。
 4. **站点结构耦合**：所有选择器（`div.list2`、`ul.list3 li a`、`div.articlebody p` 等）都绑定当前页面结构，站点改版后需同步调整。
 5. **`retry(delay, times)` 的语义**：参数 `times` 是**包裹层数**而不是重试次数，实际尝试次数为 `2^times`，且每层延迟递增 1 秒。
-6. **合并阶段是并行的**：`mergeAndCleanFlow` 对同一目标文件并发 `append`，章节顺序不保证，且并发写同一文件存在竞争风险；如需严格顺序，应改为串行追加或先排序再合并。
-7. **旧 API 残留**：`QuanBeanTests` 中的用例仍按 `bookSearchFlow(bookName)` 的旧签名调用，而当前方法是 `QuanBenFlows.bookSearchFlow()`（无参，返回 `Flow`），直接运行会抛 `MissingMethodException`；请以 `Example4QuanBen.main` 为准。`QuanBenFlows.groovy` 则是空文件。
-8. **`DocTasks.jsonArray` / `jsonObject`** 的输出类型固定为 `String`，若需要返回其它类型，需要重载或改用 `ParseTasks.json()`。
-9. **UTF-8**：`build.gradle` 已为 `JavaExec` 与 `GroovyCompile` 统一设置 UTF-8，避免中文乱码；在 IDE 中运行时也建议确认文件编码为 UTF-8。
-
 ---
 
 ## 许可证

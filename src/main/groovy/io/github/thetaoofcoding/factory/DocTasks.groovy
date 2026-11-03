@@ -1,5 +1,6 @@
 package io.github.thetaoofcoding.factory
 
+import groovy.concurrent.Awaitable
 import groovy.http.HttpResult
 import io.github.thetaoofcoding.component.Task
 import org.jsoup.nodes.Document
@@ -7,31 +8,19 @@ import java.util.function.Function
 
 class DocTasks {
 
-    static Task<HttpResult, String> body(Function<String, String> function) {
-        { httpResult ->
-            def t = httpResult.body()
-            async { function.apply(t) }
-        }
+    static <R> Task<HttpResult, R> body(Function<String, R> function) {
+        { httpResult -> Awaitable.of(httpResult.body()).then(function) }
     }
 
     static <R> Task<HttpResult, R> html(Function<Document, R> function) {
-        { httpResult ->
-            def doc = httpResult.html as Document
-            async { function.apply(doc) }
-        }
+        { httpResult -> Awaitable.of(httpResult.html as Document).then(function) }
     }
 
-    static <T> Task<HttpResult, String> jsonArray(Function<List<T>, String> function) {
-        { httpResult ->
-            def list = httpResult.json as List<T>
-            async { function.apply(list) }
-        }
+    static <T, R> Task<HttpResult, R> jsonArray(Function<List<T>, R> function) {
+        { httpResult -> Awaitable.of(httpResult.json as List<T>).then(function) }
     }
 
-    static <T> Task<HttpResult, String> jsonObject(Function<T, String> function) {
-        { httpResult ->
-            def t = httpResult.json as T
-            async { function.apply(t) }
-        }
+    static <T, R> Task<HttpResult, R> jsonObject(Function<T, R> function) {
+        { httpResult -> Awaitable.of(httpResult.json as T).then(function) }
     }
 }
