@@ -15,6 +15,10 @@ import static io.github.thetaoofcoding.example.Example4QuanBen.QuanBenFlows.*
 class Example4QuanBen {
 
     static void main(String[] args) {
+        /*
+         * 实测：contentFlow 已被 TLS 拦截，不过，尚有法可解，contentFlow 其中 httpGet 部分可改用 curl 方式
+         * 不让爬就不爬，没理由跟你搞什么攻防拉锯，此案例后续不再维护
+         */
         def bookNames = ["遮天", "仙逆", "凡人修仙传"]
         def flow = (bookSearchFlow() >> chapterListFlow() >> contentListFlow() >> mergeAndCleanFlow())
         bookNames.eachParallel(flow.&call)
@@ -65,7 +69,10 @@ class Example4QuanBen {
             { ->
                 { book ->
                     def t2 = Task.<List<Book.Chapter>, Book> fromSync { book.chapters = it; book }
-                    (HttpTasks.httpGet() | t1 | t2) { httpUri = book.uri }
+                    (HttpTasks.httpGet() | t1 | t2) {
+                        httpHeaders = ['User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:150.0) Gecko/20100101 Firefox/150.0']
+                        httpUri = book.uri
+                    }
                 }
             }
         }

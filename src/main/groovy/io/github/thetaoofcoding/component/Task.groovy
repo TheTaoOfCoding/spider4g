@@ -71,21 +71,21 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 一致性任务
      */
     static <T> Task<T, T> identity() {
-        { t -> Awaitable.<T> of(t) }
+        { t -> Awaitable.<T>of(t) }
     }
 
     /*
      * 空任务
      */
     static <T, R> Task<T, R> empty() {
-        { _ -> Awaitable.<R> of(null) }
+        { _ -> Awaitable.<R>of(null) }
     }
 
     /*
      * 限流任务
      */
     static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask) {
-        Task.<T, R> withRateLimit(innerTask, 0L)
+        Task.<T, R>withRateLimit(innerTask, 0L)
     }
 
     /*
@@ -100,7 +100,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Task<? super T, R> task) {
-        Task.withParallel(before, task, { it })
+        Task.<T, R>withParallel(before, task, { it })
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Task<? super T, R> task) {
