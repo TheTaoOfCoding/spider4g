@@ -69,10 +69,7 @@ class Example4QuanBen {
             { ->
                 { book ->
                     def t2 = Task.<List<Book.Chapter>, Book> fromSync { book.chapters = it; book }
-                    (HttpTasks.httpGet() | t1 | t2) {
-                        httpHeaders = ['User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:150.0) Gecko/20100101 Firefox/150.0']
-                        httpUri = book.uri
-                    }
+                    (HttpTasks.httpGet() | t1 | t2) { httpUri = book.uri }
                 }
             }
         }
