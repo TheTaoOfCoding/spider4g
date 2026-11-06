@@ -12,7 +12,18 @@ class ParseTasks {
         { html -> Awaitable.of(html).then(Jsoup.&parse) }
     }
 
-    static <R> Task<String, R> json() {
-        { str -> Awaitable.of(str).then(new JsonSlurper().&parseText).then { it as R } }
+    static <R> Task<String, R> jsonArray(Class<R> type) {
+        { str -> Awaitable.of(str)
+                    .then(new JsonSlurper().&parseText)
+                    .then { it as List<?> }
+                    .then { list -> list.collect { it.asType(type) } }
+        }
+    }
+
+    static <R> Task<String, R> jsonObj(Class<R> type) {
+        { str -> Awaitable.of(str)
+                    .then(new JsonSlurper().&parseText)
+                    .then { it.asType(type) }
+        }
     }
 }

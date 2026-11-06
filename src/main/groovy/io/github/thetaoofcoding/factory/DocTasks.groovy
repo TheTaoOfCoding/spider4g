@@ -16,11 +16,18 @@ class DocTasks {
         { httpResult -> Awaitable.of(httpResult.html as Document).then(fn) }
     }
 
-    static <T, R> Task<HttpResult, R> jsonArray(Function<List<T>, R> fn) {
-        { httpResult -> Awaitable.of(httpResult.json as List<T>).then(fn) }
+    static <T, R> Task<HttpResult, R> jsonArray(Class<T> type, Function<List<T>, R> fn) {
+        { httpResult -> Awaitable.of(httpResult.json)
+                    .then { it as List<?> }
+                    .then { list -> list.collect { it.asType(type) } }
+                    .then(fn)
+        }
     }
 
-    static <T, R> Task<HttpResult, R> jsonObject(Function<T, R> fn) {
-        { httpResult -> Awaitable.of(httpResult.json as T).then(fn) }
+    static <T, R> Task<HttpResult, R> jsonObject(Class<T> type, Function<T, R> fn) {
+        { httpResult -> Awaitable.of(httpResult.json)
+                    .then { it.asType(type) }
+                    .then(fn)
+        }
     }
 }
