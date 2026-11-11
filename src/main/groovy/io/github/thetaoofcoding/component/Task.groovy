@@ -135,7 +135,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 自迭代任务
      */
     static <T> Task<T, T> withRepeatUntil(Task<? super T, T> task, Predicate<T> predicate) {
-        return { t ->
+        { t ->
             if (predicate.test(t)) return Awaitable.of(t)
             task(t).thenCompose { Task.<T>withRepeatUntil(task, predicate)(it) }
         }
