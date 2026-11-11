@@ -12,7 +12,7 @@ class ParseTasks {
         { html -> Awaitable.of(html).then(Jsoup.&parse) }
     }
 
-    static <R> Task<String, R> jsonArray(Class<R> type) {
+    static <R> Task<String, List<R>> jsonArray(Class<R> type) {
         { str -> Awaitable.of(str)
                     .then(new JsonSlurper().&parseText)
                     .then { it as List<?> }

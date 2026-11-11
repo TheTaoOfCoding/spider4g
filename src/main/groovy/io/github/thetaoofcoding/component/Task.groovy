@@ -4,6 +4,7 @@ import groovy.concurrent.Awaitable
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import io.github.thetaoofcoding.util.RateLimiter
+import java.util.function.Predicate
 
 interface Task<T, R> extends Function<T, Awaitable<R>> {
 
@@ -128,5 +129,15 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      */
     static <T, R> Task<List<T>, List<R>> withSequential(Task<? super T, R> task) {
         { list -> Awaitable.of(list.collect { t -> await task(t) }) }
+    }
+
+    /*
+     * 自迭代任务
+     */
+    static <T> Task<T, T> withRepeatUntil(Task<? super T, T> task, Predicate<T> predicate) {
+        return { t ->
+            if (predicate.test(t)) return Awaitable.of(t)
+            task(t).thenCompose { Task.<T>withRepeatUntil(task, predicate)(it) }
+        }
     }
 }

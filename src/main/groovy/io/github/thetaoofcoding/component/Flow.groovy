@@ -1,6 +1,7 @@
 package io.github.thetaoofcoding.component
 
 import java.util.function.Function
+import java.util.function.Predicate
 
 interface Flow<T, R> {
 
@@ -77,5 +78,12 @@ interface Flow<T, R> {
      */
     static <T, R> Flow<List<T>, List<R>> withSequential(Flow<? super T, R> flow) {
         { -> Task.withSequential(flow.head()) }
+    }
+
+    /*
+     * 自迭代流程
+     */
+    static <T> Flow<T, T> withRepeatUntil(Flow<? super T, T> flow, Predicate<T> predicate) {
+        { -> Task.withRepeatUntil(flow.head(), predicate) }
     }
 }

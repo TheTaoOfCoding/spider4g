@@ -3,6 +3,8 @@ package io.github.thetaoofcoding.test
 import io.github.thetaoofcoding.component.Task
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.atomic.AtomicInteger
 import static org.junit.jupiter.api.Assertions.*
 
@@ -123,6 +125,26 @@ class TaskTests {
             def duration = (end - start) / 1_000_000_000
             // list.size() / RateLimiter.PERMITS * delay  =====>  6 / 3 * 2 = 4
             assertEquals(duration.intValue(), 4)
+        }
+    }
+
+    @Nested
+    class RepeatUntilTask {
+        @Test
+        void "自迭代任务-repeatUntil"() {
+            // 初始分数
+            def score = 50
+            def counter = new AtomicInteger(0)
+            def task = Task.<Integer, Integer> fromDelay({ last ->
+                // 随机变化分数
+                def change = ThreadLocalRandom.current().nextInt(-10, 11)
+                println("times: ${counter.incrementAndGet()}, last: $last, change: $change")
+                last += change
+            }, 1L)
+
+            // 重复执行任务，直到分数小于0或大于等于100 或者重复执行了30次
+            def repeatUntilTask = Task.withRepeatUntil(task, { it < 0 || it >= 100 || counter.get() >= 30 })
+            await repeatUntilTask(score)
         }
     }
 }
