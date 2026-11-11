@@ -72,21 +72,21 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 一致性任务
      */
     static <T> Task<T, T> identity() {
-        { t -> Awaitable.<T>of(t) }
+        { t -> Awaitable.<T> of(t) }
     }
 
     /*
      * 空任务
      */
     static <T, R> Task<T, R> empty() {
-        { _ -> Awaitable.<R>of(null) }
+        { _ -> Awaitable.<R> of(null) }
     }
 
     /*
      * 限流任务
      */
     static <T, R> Task<T, ? extends R> withRateLimit(Task<? super T, R> innerTask) {
-        Task.<T, R>withRateLimit(innerTask, 0L)
+        Task.<T, R> withRateLimit(innerTask, 0L)
     }
 
     /*
@@ -101,15 +101,15 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Task<? super T, R> task) {
-        Task.<T, R>withParallel(before, task, { it })
+        Task.<T, R> withParallel(before, task, { it })
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Task<? super T, R> task) {
-        Task.<T, R>withParallel({ it }, task, { it })
+        Task.<T, R> withParallel({ it }, task, { it })
     }
 
     static <T, R> Task<List<T>, List<R>> withParallel(Task<? super T, R> task, Function<List<R>, List<R>> after) {
-        Task.<T, R>withParallel({ it }, task, after)
+        Task.<T, R> withParallel({ it }, task, after)
     }
 
     /*
@@ -134,10 +134,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     /*
      * 自迭代任务
      */
-    static <T> Task<T, T> withRepeatUntil(Task<? super T, T> task, Predicate<T> predicate) {
-        { t ->
-            if (predicate.test(t)) return Awaitable.of(t)
-            task(t).thenCompose { Task.<T>withRepeatUntil(task, predicate)(it) }
-        }
+    static <T> Task<T, T> withRepeatUntil(Task<? super T, T> task, Predicate<T> until) {
+        { t -> until.test(t) ? Awaitable.of(t) : task(t).thenCompose { last -> Task.<T> withRepeatUntil(task, until)(last) } }
     }
 }

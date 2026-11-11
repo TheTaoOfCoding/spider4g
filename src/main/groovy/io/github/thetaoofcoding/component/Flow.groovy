@@ -83,7 +83,7 @@ interface Flow<T, R> {
     /*
      * 自迭代流程
      */
-    static <T> Flow<T, T> withRepeatUntil(Flow<? super T, T> flow, Predicate<T> predicate) {
-        { -> Task.withRepeatUntil(flow.head(), predicate) }
+    static <T> Flow<T, T> withRepeatUntil(Flow<? super T, T> flow, Predicate<T> until) {
+        { -> Task.withRepeatUntil(flow.head(), until) }
     }
 }
