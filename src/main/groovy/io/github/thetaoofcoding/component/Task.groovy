@@ -126,15 +126,30 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
 
     /*
      * 顺序任务
+     * { list -> Awaitable.of(list.collect { t -> await task(t) }) }
      */
     static <T, R> Task<List<T>, List<R>> withSequential(Task<? super T, R> task) {
-        { list -> Awaitable.of(list.collect { t -> await task(t) }) }
+        { list ->
+            final def rs = new ArrayList<R>()
+            Awaitable.of(list)
+                    .then(List.&iterator)
+                    .then { iterator -> Task.<T, R, List<R>> withIteratorAsync(task, rs)(iterator) }
+                    .then { rs }
+        }
+    }
+
+    static <T, R, L extends List<? super R>> Task<Iterator<T>, Iterator<T>> withIteratorAsync(Task<? super T, R> task, final L rs) {
+        { iterator -> iterator.hasNext() ? task.execute(iterator.next())
+                    .then(rs.&add)
+                    .thenCompose { Task.<T, R, L> withIteratorAsync(task, rs)(iterator) }
+                    : Awaitable.of(iterator)
+        }
     }
 
     /*
      * 自迭代任务
      */
     static <T> Task<T, T> withRepeatUntil(Task<? super T, T> task, Predicate<T> until) {
-        { t -> until.test(t) ? Awaitable.of(t) : task(t).thenCompose { last -> Task.<T> withRepeatUntil(task, until)(last) } }
+        { t -> until.test(t) ? Awaitable.of(t) : task(t).thenCompose { previous -> Task.<T> withRepeatUntil(task, until)(previous) } }
     }
 }

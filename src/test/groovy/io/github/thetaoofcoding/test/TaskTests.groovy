@@ -129,17 +129,30 @@ class TaskTests {
     }
 
     @Nested
+    class SequentialTask {
+        @Test
+        void "顺序任务-sequential"() {
+            def ts = (1..10).toList()
+            def task = Task.<Integer, String> fromSync { i ->
+                ">>$i<<".toString().tap { println it }
+            }
+            def rs = await Task.withSequential(task)(ts)
+            assertEquals(['>>1<<', '>>2<<', '>>3<<', '>>4<<', '>>5<<', '>>6<<', '>>7<<', '>>8<<', '>>9<<', '>>10<<'], rs)
+        }
+    }
+
+    @Nested
     class RepeatUntilTask {
         @Test
         void "自迭代任务-repeatUntil"() {
             // 初始分数
             def score = 50
             def counter = new AtomicInteger(0)
-            def task = Task.<Integer, Integer> fromDelay({ last ->
+            def task = Task.<Integer, Integer> fromDelay({ previous ->
                 // 随机变化分数
                 def change = ThreadLocalRandom.current().nextInt(-10, 11)
-                println("times: ${counter.incrementAndGet()}, last: $last, change: $change")
-                last += change
+                println("times: ${counter.incrementAndGet()}, previous: $previous, change: $change")
+                previous += change
             }, 1L)
 
             // 重复执行任务，直到分数小于0或大于等于100 或者重复执行了30次

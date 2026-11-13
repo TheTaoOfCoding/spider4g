@@ -104,26 +104,29 @@ class FlowTests {
     class SequentialFlow {
         @Test
         void "顺序流程-withSequential"() {
-            def list = (1..10).toList()
-            def flow = Flow.fromSync { ">>$it<<".with { println it } }
-            Flow.withSequential(flow)(list)
+            def ts = (1..10).toList()
+            def flow = Flow.<Integer, String> fromSync { i ->
+                ">>$i<<".toString().tap { println it }
+            }
+            def rs = Flow.withSequential(flow)(ts)
+            assertEquals(['>>1<<', '>>2<<', '>>3<<', '>>4<<', '>>5<<', '>>6<<', '>>7<<', '>>8<<', '>>9<<', '>>10<<'], rs)
         }
     }
 
     @Nested
     class RepeatUntilFlow {
         @Test
-        void "重复流程-withRepeatUntil"() {
+        void "自迭代流程-withRepeatUntil"() {
             // 初始分数
             def score = 50
             def counter = new AtomicInteger(0)
-            def task = Task.<Integer, Integer> fromDelay({ last ->
+            def task = Task.<Integer, Integer> fromDelay({ previous ->
                 // 随机变化分数
                 def change = ThreadLocalRandom.current().nextInt(-10, 11)
-                println("times: ${counter.incrementAndGet()}, last: $last, change: $change")
-                last += change
+                println("times: ${counter.incrementAndGet()}, previous: $previous, change: $change")
+                previous += change
             }, 1L)
-            def flow = { -> task}
+            def flow = { -> task }
 
             // 重复执行任务，直到分数小于0或大于等于100 或者重复执行了30次
             def repeatUntilFlow = Flow.withRepeatUntil(flow, { it < 0 || it >= 100 || counter.get() >= 30 })
