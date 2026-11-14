@@ -133,7 +133,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
             final def rs = new ArrayList<R>()
             Awaitable.of(list)
                     .then(List.&iterator)
-                    .then { iterator -> Task.<T, R, List<R>> withIteratorAsync(task, rs)(iterator) }
+                    .thenCompose { iterator -> Task.<T, R, List<R>> withIteratorAsync(task, rs)(iterator) }
                     .then { rs }
         }
     }
