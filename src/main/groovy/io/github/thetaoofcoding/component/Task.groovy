@@ -123,7 +123,7 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * 并行任务
      */
     static <T, R> Task<List<T>, List<R>> withParallel(Function<List<T>, List<T>> before, Task<? super T, R> task, Function<List<R>, List<R>> after) {
-        { list -> Awaitable.<List<T>> of(list)
+        { ts -> Awaitable.<List<T>> of(ts)
                     .then(before)
                     .then { it.collect(task.&execute) as Awaitable[] }
                     .thenCompose { awaitables -> Awaitable.all(awaitables) }
@@ -136,9 +136,9 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * { list -> Awaitable.of(list.collect { t -> await task(t) }) }
      */
     static <T, R> Task<List<T>, List<R>> withSequential(Task<? super T, R> task) {
-        { list ->
+        { ts ->
             final def rs = new ArrayList<R>()
-            Awaitable.of(list)
+            Awaitable.of(ts)
                     .then(List.&iterator)
                     .thenCompose { iterator -> Task.<T, R, List<R>> withIteratorAsync(task, rs)(iterator) }
                     .then { rs }
