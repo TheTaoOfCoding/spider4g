@@ -40,18 +40,25 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
     }
 
     /*
-     * 重试任务
+     * 重试任务（一次）
      */
-    default Task<T, R> retry(long delay) {
+    default Task<T, R> tryAgain(long delay) {
         { t -> execute(t).exceptionally { await Awaitable.delay(delay, TimeUnit.SECONDS).thenCompose { execute(t) } } }
     }
 
     /*
-     * 重试任务
+     * 降级任务
+     */
+    default Task<T, R> orElse(Task<T, R> fallback, long delay) {
+        { t -> execute(t).exceptionally { await Awaitable.delay(delay, TimeUnit.SECONDS).thenCompose { fallback.execute(t) } } }
+    }
+
+    /*
+     * 重试任务（多次）
      */
     default Task<T, R> retry(long delay, long times) {
-        if (times == 1) return retry(delay)
-        retry(delay, times - 1).retry(delay + 1)
+        if (times == 1) return tryAgain(delay)
+        retry(delay, times - 1).orElse(this, delay)
     }
 
     /*

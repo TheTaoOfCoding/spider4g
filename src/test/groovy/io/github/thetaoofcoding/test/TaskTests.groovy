@@ -73,7 +73,7 @@ class TaskTests {
                     throw new RuntimeException("first attempt fails")
                 }
                 str
-            }.retry(1L)
+            }.tryAgain(1L)
 
             assertEquals("hello", await(task("hello")))
             // 方法调用次数：第一次调用失败，第二次调用成功
