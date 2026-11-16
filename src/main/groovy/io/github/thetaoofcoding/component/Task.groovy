@@ -136,12 +136,19 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
      * { list -> Awaitable.of(list.collect { t -> await task(t) }) }
      */
     static <T, R> Task<List<T>, List<R>> withSequential(Task<? super T, R> task) {
-        { ts ->
-            final def rs = new ArrayList<R>()
-            Awaitable.of(ts)
-                    .then(List.&iterator)
-                    .thenCompose { iterator -> Task.<T, R, List<R>> withIteratorAsync(task, rs)(iterator) }
-                    .then { rs }
+        { ts -> Awaitable.of(ts)
+                    .then(List<T>.&iterator)
+                    .thenCompose { iterator ->
+                        final def rs = new ArrayList<R>()
+                        def step
+                        step = { ->
+                            iterator.hasNext() ? task.execute(iterator.next())
+                                    .then(rs.&add)
+                                    .thenCompose { _ -> step() }
+                                    : Awaitable.of(null)
+                        }
+                        step().then { rs }
+                    }
         }
     }
 
