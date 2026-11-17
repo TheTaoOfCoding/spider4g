@@ -152,14 +152,6 @@ interface Task<T, R> extends Function<T, Awaitable<R>> {
         }
     }
 
-    static <T, R, L extends List<? super R>> Task<Iterator<T>, Iterator<T>> withIteratorAsync(Task<? super T, R> task, final L rs) {
-        { iterator -> iterator.hasNext() ? task.execute(iterator.next())
-                    .then(rs.&add)
-                    .thenCompose { Task.<T, R, L> withIteratorAsync(task, rs)(iterator) }
-                    : Awaitable.of(iterator)
-        }
-    }
-
     /*
      * 自迭代任务
      */
